@@ -7,14 +7,7 @@ from .parte1 import alcance_de_estaciones
 from .parte2 import construir_heuristica, evaluar_propuesta
 
 
-def resolver_exacto(
-    instancia: dict[str, object],
-    alcance: dict[tuple[str, str], dict[str, int | list[int]]] | None = None,
-    limite_segundos: float | None = None,
-) -> tuple[
-    dict[str, int | list[tuple[str, str]] | dict[str, int]],
-    dict[str, float | int | bool],
-]:
+def resolver_exacto(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]] | None = None,limite_segundos: float | None = None,) -> tuple[dict[str, int | list[tuple[str, str]] | dict[str, int]],dict[str, float | int | bool],]:
     """Encuentra la propuesta de mayor valor y certifica el optimo al terminar."""
     alcance = alcance or alcance_de_estaciones(instancia)
     tipos = instancia["parametros"]["tipos"]
@@ -35,13 +28,7 @@ def resolver_exacto(
         for tipo, opcion in opciones[lotes[i]]:
             restantes[i][tipo].update(opcion["incidentes_cubiertos"])
 
-    def buscar(
-        i: int,
-        costo: int,
-        cubiertos: dict[str, set[int]],
-        valor: int,
-        estaciones: list[tuple[str, str]],
-    ) -> None:
+    def buscar(i: int,costo: int,cubiertos: dict[str, set[int]],valor: int,estaciones: list[tuple[str, str]],) -> None:
         nonlocal mejor, nodos, agotado
         nodos += 1
         if limite_segundos is not None and time.perf_counter() - inicio > limite_segundos:
@@ -98,14 +85,7 @@ def resolver_exacto(
                    "optimo_probado": not agotado}
 
 
-def resolver_parte3(
-    nombre: str,
-    carpeta_instancias: str | Path | None = None,
-    limite_segundos: float | None = None,
-) -> tuple[
-    dict[str, int | list[tuple[str, str]] | dict[str, int]],
-    dict[str, float | int | bool],
-]:
+def resolver_parte3(nombre: str,carpeta_instancias: str | Path | None = None,limite_segundos: float | None = None,) -> tuple[dict[str, int | list[tuple[str, str]] | dict[str, int]],dict[str, float | int | bool],]:
     from .instancia import leer_instancia
     instancia = leer_instancia(nombre, carpeta_instancias)
     return resolver_exacto(instancia, limite_segundos=limite_segundos)

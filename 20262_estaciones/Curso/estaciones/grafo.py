@@ -7,9 +7,7 @@ ninguna libreria que calcule rutas o distancias en grafos.
 from heapq import heappop, heappush
 
 
-def dijkstra(
-    grafo: dict[int, list[tuple[int, int]]], origen: int, corte: int
-) -> dict[int, int]:
+def dijkstra(grafo: dict[int, list[tuple[int, int]]], origen: int, corte: int) -> dict[int, int]:
     """Distancias minimas desde `origen`, respetando el sentido de los tramos.
 
     Devuelve solo los nodos que quedan a distancia menor o igual que `corte`.

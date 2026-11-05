@@ -31,9 +31,7 @@ def costo_estacion(costo_base: int | float, factor_zona: float) -> int:
     return int(math.floor(producto + 0.5))
 
 
-def alcance_de_estaciones(
-    instancia: dict[str, object]
-) -> dict[tuple[str, str], dict[str, int | list[int]]]:
+def alcance_de_estaciones(instancia: dict[str, object]) -> dict[tuple[str, str], dict[str, int | list[int]]]:
     """Costo e incidentes cubiertos de cada par (lote, tipo).
 
     Parametros
@@ -76,18 +74,13 @@ def alcance_de_estaciones(
     return resultado
 
 
-def resolver_parte1(
-    nombre_instancia: str, carpeta_instancias: str | Path | None = None
-) -> dict[tuple[str, str], dict[str, int | list[int]]]:
+def resolver_parte1(nombre_instancia: str, carpeta_instancias: str | Path | None = None) -> dict[tuple[str, str], dict[str, int | list[int]]]:
     """Punto de entrada de la Parte 1: nombre de instancia -> alcance y costos."""
     instancia = leer_instancia(nombre_instancia, carpeta_instancias)
     return alcance_de_estaciones(instancia)
 
 
-def incidentes_alcanzables(
-    instancia: dict[str, object],
-    alcance: dict[tuple[str, str], dict[str, int | list[int]]],
-) -> dict[str, set[int]]:
+def incidentes_alcanzables(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]],) -> dict[str, set[int]]:
     """Incidentes que alguna estacion posible podria cubrir, por tipo.
 
     Es el techo de cobertura de la instancia si no hubiera presupuesto, util
@@ -102,10 +95,7 @@ def incidentes_alcanzables(
     return por_tipo
 
 
-def valor_maximo_posible(
-    instancia: dict[str, object],
-    alcance: dict[tuple[str, str], dict[str, int | list[int]]],
-) -> int:
+def valor_maximo_posible(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]],) -> int:
     """Suma de pesos de todos los incidentes alcanzables, sin mirar presupuesto."""
     tipos = instancia["parametros"]["tipos"]
     alcanzables = incidentes_alcanzables(instancia, alcance)

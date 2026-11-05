@@ -7,14 +7,7 @@ from .parte2 import construir_heuristica
 from .parte3 import resolver_exacto
 
 
-def recomendar(
-    instancia: dict[str, object],
-    alcance: dict[tuple[str, str], dict[str, int | list[int]]] | None = None,
-) -> tuple[
-    str,
-    dict[str, dict[str, int | list[tuple[str, str]] | dict[str, int]]],
-    dict[tuple[str, str], dict[str, int | list[int]]],
-]:
+def recomendar(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]] | None = None,) -> tuple[str,dict[str, dict[str, int | list[tuple[str, str]] | dict[str, int]]],dict[tuple[str, str], dict[str, int | list[int]]],]:
     """Escoge la mejor de las heuristicas; empate: menor costo y nombre."""
     alcance = alcance or alcance_de_estaciones(instancia)
     candidatas = {h: construir_heuristica(instancia, alcance, h)
@@ -24,21 +17,14 @@ def recomendar(
     return nombre, candidatas, alcance
 
 
-def tabla_propuesta(
-    propuesta: dict[str, int | list[tuple[str, str]] | dict[str, int]],
-    alcance: dict[tuple[str, str], dict[str, int | list[int]]],
-) -> list[dict[str, str | int]]:
+def tabla_propuesta(propuesta: dict[str, int | list[tuple[str, str]] | dict[str, int]],alcance: dict[tuple[str, str], dict[str, int | list[int]]],) -> list[dict[str, str | int]]:
     """Filas solicitadas: lote, tipo, costo y casos que cubre la estacion."""
     return [{"lote": lote, "tipo": tipo, "costo": alcance[(lote, tipo)]["costo"],
              "casos": len(alcance[(lote, tipo)]["incidentes_cubiertos"])}
             for lote, tipo in propuesta["estaciones"]]
 
 
-def informe_propuesta(
-    nombre: str,
-    metodo: str = "heuristica",
-    carpeta_instancias: str | Path | None = None,
-) -> dict[str, object]:
+def informe_propuesta(nombre: str,metodo: str = "heuristica",carpeta_instancias: str | Path | None = None,) -> dict[str, object]:
     """Prepara tabla, totales y justificacion, reutilizable por consola o GUI."""
     from .instancia import leer_instancia
     instancia = leer_instancia(nombre, carpeta_instancias)
