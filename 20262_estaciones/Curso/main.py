@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from estaciones.informe import informe_parte1
-from estaciones.instancia import NOMBRES_INSTANCIAS, leer_instancia
+from estaciones.instancia import leer_instancia
 from estaciones.parte1 import alcance_de_estaciones
 from estaciones.parte2 import construir_heuristica
 from estaciones.parte3 import resolver_exacto
@@ -12,9 +12,8 @@ from estaciones.parte4 import informe_propuesta
 
 
 def _imprimir_propuesta(etiqueta, propuesta):
-    print(f"{etiqueta}: valor {propuesta['valor']}, costo {propuesta['costo_total']} millones")
-    print("  estaciones:", ", ".join(f"{lote}/{tipo}" for lote, tipo in propuesta["estaciones"]) or "ninguna")
-    print("  casos cubiertos:", ", ".join(f"{t}: {n}" for t, n in propuesta["casos_cubiertos"].items()))
+    """Imprime la salida con las mismas claves de los casos del enunciado."""
+    print(f"{etiqueta}: {propuesta}")
 
 
 def construir_parser():
@@ -22,7 +21,7 @@ def construir_parser():
     sub = parser.add_subparsers(dest="parte")
     for parte, ayuda in (("parte1", "alcance y costo"), ("parte2", "heuristicas"), ("parte3", "optimo probado"), ("parte4", "propuesta para el concejo")):
         p = sub.add_parser(parte, help=ayuda)
-        p.add_argument("instancias", nargs="*", help="por defecto: pequena, comuna y ciudad")
+        p.add_argument("instancias", nargs="*", help="instancia(s); por defecto: pequena")
         p.add_argument("--instancias", dest="carpeta", default=None, metavar="CARPETA")
     sub.choices["parte1"].add_argument("--todos-los-ids", action="store_true")
     sub.choices["parte1"].add_argument("--sin-tabla", action="store_true")
@@ -49,29 +48,38 @@ def main(argv=None):
         if opcion not in partes:
             print("Opcion no valida. Use un numero entre 1 y 4.", file=sys.stderr)
             return 2
-        return main([partes[opcion], "pequena"])
-    nombres = args.instancias or list(NOMBRES_INSTANCIAS)
+        print("Instancia: 1. pequena  2. comuna  3. ciudad")
+        try:
+            eleccion_instancia = input("Instancia [1-3] (Enter = pequena): ").strip() or "1"
+        except EOFError:
+            eleccion_instancia = "1"
+        instancias = {"1": "pequena", "2": "comuna", "3": "ciudad"}
+        if eleccion_instancia not in instancias:
+            print("Instancia no valida. Use un numero entre 1 y 3.", file=sys.stderr)
+            return 2
+        return main([partes[opcion], instancias[eleccion_instancia]])
+    # Al invocar una parte desde la terminal sin indicar instancia se conserva
+    # una salida corta y manejable. El menú permite elegir las tres opciones.
+    nombres = args.instancias or ["pequena"]
     for nombre in nombres:
         try:
             if args.parte == "parte1":
-                informe_parte1(nombre, args.carpeta, None if args.todos_los_ids else 10, not args.sin_tabla)
+                informe_parte1(nombre, args.carpeta, None, not args.sin_tabla)
                 continue
             instancia = leer_instancia(nombre, args.carpeta)
             alcance = alcance_de_estaciones(instancia)
             if args.parte == "parte2":
-                print(f"=== Parte 2 / {nombre} ===")
                 for h in ("base", "densidad", "ajustada"):
                     _imprimir_propuesta(h, construir_heuristica(instancia, alcance, h))
             elif args.parte == "parte3":
-                print(f"=== Parte 3 / {nombre}: comparacion ===")
                 for h in ("base", "densidad", "ajustada"):
                     propuesta_h = construir_heuristica(instancia, alcance, h)
-                    print(f"  {h:<10} valor {propuesta_h['valor']:>5} | costo {propuesta_h['costo_total']:>5}")
+                    _imprimir_propuesta(h, propuesta_h)
                 if nombre == "ciudad":
                     print("  optimo      no se calcula: con 80 lotes y 4 decisiones por lote hay 4^80 = 1.46e48 propuestas.")
                 else:
                     propuesta, info = resolver_exacto(instancia, alcance)
-                    _imprimir_propuesta(f"optimo ({info['segundos']:.2f} s; {info['nodos']} ramas)", propuesta)
+                    _imprimir_propuesta("optimo", propuesta)
             else:
                 metodo = "exacta" if args.exacta else "heuristica"
                 if metodo == "exacta" and nombre == "ciudad": raise ValueError("la propuesta exacta se pide solo para pequena y comuna")
