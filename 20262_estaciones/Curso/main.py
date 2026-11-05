@@ -11,12 +11,12 @@ from estaciones.parte3 import resolver_exacto
 from estaciones.parte4 import informe_propuesta
 
 
-def _imprimir_propuesta(etiqueta, propuesta):
+def _imprimir_propuesta(etiqueta: str, propuesta: dict[str, object]) -> None:
     """Imprime la salida con las mismas claves de los casos del enunciado."""
     print(f"{etiqueta}: {propuesta}")
 
 
-def construir_parser():
+def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Proyecto ADA: estaciones para una alcaldia nueva.")
     sub = parser.add_subparsers(dest="parte")
     for parte, ayuda in (("parte1", "alcance y costo"), ("parte2", "heuristicas"), ("parte3", "optimo probado"), ("parte4", "propuesta para el concejo")):
@@ -29,7 +29,7 @@ def construir_parser():
     return parser
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     args = construir_parser().parse_args(argv)
     if args.parte is None:
         print("Proyecto: estaciones para una alcaldia nueva")

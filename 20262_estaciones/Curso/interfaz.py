@@ -14,7 +14,7 @@ MAX_TRAMOS_DIBUJADOS = 3000
 class Aplicacion(tk.Tk):
     """Ventana para explorar una propuesta sin recalcular innecesariamente."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.title("Estaciones para una alcaldia")
         self.geometry("1120x720")
@@ -28,14 +28,14 @@ class Aplicacion(tk.Tk):
         self._crear_contenido()
         self.mostrar()
 
-    def _crear_estilos(self):
+    def _crear_estilos(self) -> None:
         estilo = ttk.Style(self)
         estilo.theme_use("clam")
         estilo.configure("Titulo.TLabel", font=("TkDefaultFont", 15, "bold"))
         estilo.configure("Estado.TLabel", foreground="#475569")
         estilo.configure("Treeview", rowheight=26)
 
-    def _crear_controles(self):
+    def _crear_controles(self) -> None:
         superior = ttk.Frame(self, padding=(18, 14, 18, 8))
         superior.pack(fill="x")
         ttk.Label(superior, text="Estaciones para una alcaldía", style="Titulo.TLabel").pack(anchor="w")
@@ -58,7 +58,7 @@ class Aplicacion(tk.Tk):
         ttk.Label(filtros, textvariable=self.estado, style="Estado.TLabel").pack(side="right")
         self.selector_instancia.bind("<<ComboboxSelected>>", lambda _evento: self._validar_metodo())
 
-    def _crear_contenido(self):
+    def _crear_contenido(self) -> None:
         self.resumen = ttk.Label(self, padding=(18, 0, 18, 10), justify="left", wraplength=1050)
         self.resumen.pack(fill="x")
         cuerpo = ttk.PanedWindow(self, orient="horizontal")
@@ -78,12 +78,12 @@ class Aplicacion(tk.Tk):
         self.tabla.pack(fill="both", expand=True)
         cuerpo.add(lateral, weight=2)
 
-    def _validar_metodo(self):
+    def _validar_metodo(self) -> None:
         if self.instancia.get() == "ciudad" and self.metodo.get() == "exacta":
             self.metodo.set("heuristica")
             self.estado.set("En ciudad se usa heurística: el óptimo exacto no es viable.")
 
-    def mostrar(self):
+    def mostrar(self) -> None:
         self._validar_metodo()
         clave = (self.instancia.get(), self.metodo.get())
         self.boton.state(["disabled"])
@@ -105,7 +105,7 @@ class Aplicacion(tk.Tk):
         finally:
             self.boton.state(["!disabled"])
 
-    def _actualizar_panel(self, datos):
+    def _actualizar_panel(self, datos: dict[str, object]) -> None:
         propuesta = datos["propuesta"]
         parametros = datos["instancia"]["parametros"]
         self.resumen.config(
@@ -119,7 +119,7 @@ class Aplicacion(tk.Tk):
             self.tabla.insert("", "end", values=(fila["lote"], fila["tipo"],
                                                     f"{fila['costo']:,}", fila["casos"]))
 
-    def dibujar(self, datos):
+    def dibujar(self, datos: dict[str, object]) -> None:
         """Dibuja una muestra representativa de la red para no bloquear ciudad."""
         self.canvas.delete("all")
         ins, propuesta = datos["instancia"], datos["propuesta"]
@@ -131,7 +131,7 @@ class Aplicacion(tk.Tk):
         min_lat = min(lat for lat, _ in coordenadas); max_lat = max(lat for lat, _ in coordenadas)
         min_lon = min(lon for _, lon in coordenadas); max_lon = max(lon for _, lon in coordenadas)
 
-        def punto(nodo):
+        def punto(nodo: int) -> tuple[float, float]:
             lat, lon = ins["nodos"][nodo]
             x = margen + (lon - min_lon) * (ancho - 2 * margen) / (max_lon - min_lon or 1)
             y = alto - margen - (lat - min_lat) * (alto - 2 * margen) / (max_lat - min_lat or 1)
@@ -165,7 +165,7 @@ class Aplicacion(tk.Tk):
                 self.canvas.create_text(x, y-14, text=lote, font=("TkDefaultFont", 8))
         self._leyenda(ancho)
 
-    def _leyenda(self, ancho):
+    def _leyenda(self, ancho: int) -> None:
         elementos = (("■", "Lote libre", "#64748b"), ("■", "CAI / hurto", COLORES["hurto"]),
                      ("■", "Tránsito", COLORES["accidente"]), ("■", "Bomberos", COLORES["incendio"]))
         x = 15

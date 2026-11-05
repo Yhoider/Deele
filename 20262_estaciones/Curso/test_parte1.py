@@ -27,7 +27,7 @@ CASOS_ENUNCIADO = [
 SEGUNDOS_MAXIMOS_CIUDAD = 60
 
 
-def test_casos_del_enunciado():
+def test_casos_del_enunciado() -> None:
     cache = {}
     for caso in CASOS_ENUNCIADO:
         entrada, esperado = caso["entrada"], caso["salida"]
@@ -41,7 +41,7 @@ def test_casos_del_enunciado():
         )
 
 
-def test_costo_redondea_al_millon_mas_cercano():
+def test_costo_redondea_al_millon_mas_cercano() -> None:
     # El ejemplo del enunciado: un CAI en L1 de pequena cuesta 1.000 x 1.1.
     assert costo_estacion(1000, 1.1) == 1100
     # Casos donde el producto en flotantes no es exacto.
@@ -50,7 +50,7 @@ def test_costo_redondea_al_millon_mas_cercano():
     assert costo_estacion(1000, 0.85) == 850
 
 
-def test_un_lote_sin_cobertura_devuelve_lista_vacia():
+def test_un_lote_sin_cobertura_devuelve_lista_vacia() -> None:
     # L58 de ciudad esta en un nodo desde el que las vias casi no salen y no
     # alcanza ningun incidente de ningun tipo. La salida debe ser una lista
     # vacia, no un error.
@@ -60,7 +60,7 @@ def test_un_lote_sin_cobertura_devuelve_lista_vacia():
         assert alcance[("L58", tipo)]["costo"] > 0
 
 
-def test_ciudad_termina_en_menos_de_un_minuto():
+def test_ciudad_termina_en_menos_de_un_minuto() -> None:
     inicio = time.perf_counter()
     alcance = resolver_parte1("ciudad")
     segundos = time.perf_counter() - inicio
@@ -70,7 +70,7 @@ def test_ciudad_termina_en_menos_de_un_minuto():
     )
 
 
-def _correr_sin_pytest():
+def _correr_sin_pytest() -> int:
     pruebas = [
         ("casos del enunciado", test_casos_del_enunciado),
         ("redondeo del costo", test_costo_redondea_al_millon_mas_cercano),

@@ -32,12 +32,14 @@ if not CARPETA_INSTANCIAS.is_dir():
 NOMBRES_INSTANCIAS = ("pequena", "comuna", "ciudad")
 
 
-def _a_decimetros(texto):
+def _a_decimetros(texto: str) -> int:
     """Convierte una longitud en metros del CSV a decimetros enteros."""
     return int(round(float(texto) * ESCALA))
 
 
-def leer_instancia(nombre, carpeta_instancias=None):
+def leer_instancia(
+    nombre: str, carpeta_instancias: str | Path | None = None
+) -> dict[str, object]:
     """Lee los cinco archivos de una instancia y devuelve sus estructuras.
 
     Parametros
@@ -112,7 +114,9 @@ def leer_instancia(nombre, carpeta_instancias=None):
     }
 
 
-def indexar_incidentes(incidentes):
+def indexar_incidentes(
+    incidentes: dict[int, dict[str, int | str]]
+) -> dict[int, list[tuple[str, int]]]:
     """Agrupa los incidentes por nodo: `nodo -> [(tipo, id), ...]`.
 
     Con este indice, al recorrer las distancias que devuelve Dijkstra solo se
@@ -124,7 +128,7 @@ def indexar_incidentes(incidentes):
     return por_nodo
 
 
-def contar_por_tipo(incidentes):
+def contar_por_tipo(incidentes: dict[int, dict[str, int | str]]) -> dict[str, int]:
     """Cuantos incidentes hay de cada tipo en el historico."""
     conteo = {}
     for inc in incidentes.values():
