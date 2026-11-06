@@ -8,14 +8,13 @@ from .parte2 import construir_heuristica, evaluar_propuesta
 
 
 def resolver_exacto(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]] | None = None,limite_segundos: float | None = None,) -> tuple[dict[str, int | list[tuple[str, str]] | dict[str, int]],dict[str, float | int | bool],]:
-    """Encuentra la propuesta de mayor valor y certifica el optimo al terminar."""
+   
     alcance = alcance or alcance_de_estaciones(instancia)
     tipos = instancia["parametros"]["tipos"]
     presupuesto = instancia["parametros"]["presupuesto_millones"]
     lotes = sorted(instancia["lotes"])
     opciones = {lote: [(tipo, alcance[(lote, tipo)]) for tipo in tipos] for lote in lotes}
-    # El orden no cambia el espacio de soluciones; visitar primero los lotes
-    # que potencialmente aportan mas valor encuentra antes buenas cotas.
+   
     lotes.sort(key=lambda lote: max(len(opcion["incidentes_cubiertos"]) * tipos[tipo]["peso"]
                                     for tipo, opcion in opciones[lote]), reverse=True)
     mejor = max((construir_heuristica(instancia, alcance, h)
@@ -38,10 +37,7 @@ def resolver_exacto(instancia: dict[str, object],alcance: dict[tuple[str, str], 
                             for tipo in tipos)
         if techo <= mejor["valor"]:
             return
-        # Cota adicional de mochila fraccionaria: ignora los choques entre
-        # opciones de un mismo lote y los solapamientos entre coberturas, por
-        # lo que solo puede SOBREestimar lo alcanzable. Aun asi incorpora el
-        # presupuesto y poda muchas ramas de la instancia comuna.
+        
         capacidad = presupuesto - costo
         ganancias = []
         for j in range(i, len(lotes)):

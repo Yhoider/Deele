@@ -1,4 +1,4 @@
-"""Parte 2: heuristicas que construyen una propuesta estacion por estacion."""
+
 
 from pathlib import Path
 
@@ -8,7 +8,7 @@ ORDEN_TIPOS = ("hurto", "accidente", "incendio")
 
 
 def evaluar_propuesta(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]],estaciones: list[tuple[str, str]],) -> dict[str, int | list[tuple[str, str]] | dict[str, int]]:
-    """Calcula costo, casos unicos por tipo y valor de una propuesta valida."""
+    
     tipos = instancia["parametros"]["tipos"]
     cubiertos = {tipo: set() for tipo in tipos}
     costo = 0
@@ -23,7 +23,7 @@ def evaluar_propuesta(instancia: dict[str, object],alcance: dict[tuple[str, str]
 
 
 def construir_heuristica(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]],metodo: str = "base",) -> dict[str, int | list[tuple[str, str]] | dict[str, int]]:
-    """Aplica la base o dos heuristicas propias: densidad y ajustada."""
+    
     tipos = instancia["parametros"]["tipos"]
     presupuesto = instancia["parametros"]["presupuesto_millones"]
     orden_tipo = {tipo: i for i, tipo in enumerate(ORDEN_TIPOS)}
@@ -61,7 +61,7 @@ def construir_heuristica(instancia: dict[str, object],alcance: dict[tuple[str, s
 
 
 def resolver_parte2(nombre: str, carpeta_instancias: str | Path | None = None) -> dict[str, dict[str, int | list[tuple[str, str]] | dict[str, int]]]:
-    """Devuelve las propuestas de las tres heuristicas para una instancia."""
+    
     from .instancia import leer_instancia
     instancia = leer_instancia(nombre, carpeta_instancias)
     alcance = alcance_de_estaciones(instancia)

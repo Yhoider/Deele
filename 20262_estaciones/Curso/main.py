@@ -1,4 +1,4 @@
-"""Punto de entrada de la entrega: ``python main.py parte1 pequena``."""
+
 
 import argparse
 import sys
@@ -12,7 +12,7 @@ from estaciones.parte4 import informe_propuesta
 
 
 def _imprimir_propuesta(etiqueta: str, propuesta: dict[str, object]) -> None:
-    """Imprime la salida con las mismas claves de los casos del enunciado."""
+    
     print(f"{etiqueta}: {propuesta}")
 
 
@@ -41,8 +41,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             opcion = input("Opcion [1-4] (Enter = 1): ").strip() or "1"
         except EOFError:
-            # Algunos botones de VS Code ejecutan sin entrada interactiva.
-            # En ese caso se muestra una salida util en vez de un error.
+           
             opcion = "1"
         partes = {"1": "parte1", "2": "parte2", "3": "parte3", "4": "parte4"}
         if opcion not in partes:
@@ -58,8 +57,7 @@ def main(argv: list[str] | None = None) -> int:
             print("Instancia no valida. Use un numero entre 1 y 3.", file=sys.stderr)
             return 2
         return main([partes[opcion], instancias[eleccion_instancia]])
-    # Al invocar una parte desde la terminal sin indicar instancia se conserva
-    # una salida corta y manejable. El menú permite elegir las tres opciones.
+  
     nombres = args.instancias or ["pequena"]
     for nombre in nombres:
         try:
