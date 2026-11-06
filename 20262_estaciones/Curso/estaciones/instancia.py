@@ -15,7 +15,7 @@ NOMBRES_INSTANCIAS = ("pequena", "comuna", "ciudad")
 
 
 def _a_decimetros(texto: str) -> int:
-    """Convierte una longitud en metros del CSV a decimetros enteros."""
+    
     return int(round(float(texto) * ESCALA))
 
 

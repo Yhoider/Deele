@@ -10,10 +10,8 @@ from .parte3 import resolver_exacto
 def recomendar(instancia: dict[str, object],alcance: dict[tuple[str, str], dict[str, int | list[int]]] | None = None,) -> tuple[str,dict[str, dict[str, int | list[tuple[str, str]] | dict[str, int]]],dict[tuple[str, str], dict[str, int | list[int]]],]:
   
     alcance = alcance or alcance_de_estaciones(instancia)
-    candidatas = {h: construir_heuristica(instancia, alcance, h)
-                  for h in ("base", "densidad", "ajustada")}
-    nombre = min(candidatas, key=lambda h: (-candidatas[h]["valor"],
-                                             candidatas[h]["costo_total"], h))
+    candidatas = {h: construir_heuristica(instancia, alcance, h)for h in ("base", "densidad", "ajustada")}
+    nombre = min(candidatas, key=lambda h: (-candidatas[h]["valor"], candidatas[h]["costo_total"], h))
     return nombre, candidatas, alcance
 
 
