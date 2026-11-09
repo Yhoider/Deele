@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alcaldía | Red de estaciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#inicio"><span class="brand-mark">A</span><span>alcaldía<br><b>segura</b></span></a>
+      <nav aria-label="Navegación principal">
+        <a class="nav-active" href="#inicio"><span>◈</span> Panorama</a>
+        <a href="#mapa"><span>⌁</span> Mapa de red</a>
+        <a href="#propuesta"><span>▤</span> Propuesta</a>
+      </nav>
+      <div class="sidebar-note"><span class="status-dot"></span> Motor de optimización<br><strong>conectado</strong></div>
+    </aside>
+
+    <section class="content" id="inicio">
+      <header class="topbar">
+        <div><p class="eyebrow">PLANEACIÓN TERRITORIAL / 2026</p><h1>Una red más cerca de cada incidente.</h1></div>
+        <button id="actualizar" class="refresh" type="button">↻ <span>Actualizar análisis</span></button>
+      </header>
+
+      <section class="controls" aria-label="Configuración de la propuesta">
+        <label>Escenario<select id="instancia"><option value="pequena">Pequeña · Barrio</option><option value="comuna">Comuna · Zona urbana</option><option value="ciudad">Ciudad · Red completa</option></select></label>
+        <label>Estrategia<select id="metodo"><option value="heuristica">Recomendación inteligente</option><option value="exacta">Óptimo comprobado</option></select></label>
+        <p id="estado" role="status">Cargando análisis…</p>
+      </section>
+
+      <section class="metric-grid" aria-label="Indicadores principales">
+        <article class="metric metric-blue"><span>Valor de impacto</span><strong id="valor">—</strong><small>prioridad ponderada</small></article>
+        <article class="metric metric-violet"><span>Inversión</span><strong id="costo">—</strong><small id="presupuesto">del presupuesto disponible</small></article>
+        <article class="metric metric-green"><span>Incidentes cubiertos</span><strong id="casos">—</strong><small id="porcentaje">del histórico analizado</small></article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="map-card" id="mapa">
+          <div class="card-header"><div><p class="eyebrow">RED VIAL</p><h2>Cobertura propuesta</h2></div><div class="legend"><span><i class="dot theft"></i>Hurto</span><span><i class="dot accident"></i>Accidente</span><span><i class="dot fire"></i>Incendio</span></div></div>
+          <div class="map-wrap"><svg id="map" viewBox="0 0 1000 650" role="img" aria-label="Mapa de red vial e incidentes"></svg><div class="map-caption">Las vías son dirigidas · cuadrados: lotes · puntos llenos: incidentes cubiertos</div></div>
+        </article>
+
+        <article class="recommendation-card" id="propuesta">
+          <p class="eyebrow">DECISIÓN SUGERIDA</p><h2 id="titulo-propuesta">Propuesta recomendada</h2>
+          <p id="justificacion" class="justification">Esperando datos del motor de optimización.</p>
+          <div class="station-count"><strong id="cantidad-estaciones">—</strong><span>estaciones<br>propuestas</span></div>
+          <div class="coverage-bars" id="barras-cobertura"></div>
+        </article>
+      </section>
+
+      <section class="table-card">
+        <div class="card-header"><div><p class="eyebrow">PLAN DE IMPLEMENTACIÓN</p><h2>Estaciones seleccionadas</h2></div><span class="table-badge" id="metodo-usado">—</span></div>
+        <div class="table-scroll"><table><thead><tr><th>Lote</th><th>Estación</th><th>Inversión</th><th>Casos atendidos</th><th>Prioridad</th></tr></thead><tbody id="tabla-estaciones"></tbody></table></div>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

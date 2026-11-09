@@ -1,0 +1,414 @@
+GUIA DEL PROYECTO: ESTACIONES PARA UNA ALCALDIA
+================================================
+
+1. IDEA GENERAL Y RECORRIDO DE LOS DATOS
+-----------------------------------------
+El programa decide dónde conviene construir estaciones de hurto, accidentes o
+incendios. Parte de cinco archivos de una instancia:
+
+  parametros.json  -> presupuesto, radios, costos base y prioridad de cada tipo.
+  nodos.csv         -> coordenadas de los nodos de la red vial.
+  aristas.csv       -> calles dirigidas y su longitud.
+  lotes.csv         -> posibles terrenos donde puede construirse una estación.
+  incidentes.csv    -> incidentes históricos y su ubicación.
+
+El flujo normal es:
+
+  leer_instancia -> alcance_de_estaciones -> construir_heuristica o
+  resolver_exacto -> informe_propuesta -> consola o interfaz gráfica.
+
+Se usa un grafo dirigido: si existe una arista A -> B, se puede viajar desde A
+hacia B, pero no necesariamente en el sentido contrario.
+
+
+2. estaciones/instancia.py: LECTURA Y ORGANIZACION DE LOS ARCHIVOS
+-------------------------------------------------------------------
+
+Constante ESCALA = 10
+  Las calles tienen longitudes con decimales. El programa las convierte a
+  decímetros: por ejemplo, 12.3 metros se guarda como 123. Así las sumas de
+  distancias usan enteros y se evitan errores de precisión de los flotantes.
+
+_a_decimetros(texto: str) -> int
+  1. Recibe el texto de longitud que llega desde el CSV.
+  2. Lo transforma a float, lo multiplica por ESCALA y lo redondea.
+  3. Devuelve un entero en decímetros.
+  Por qué existe: centraliza la conversión para que todos los pesos del grafo
+  queden en la misma unidad.
+
+leer_instancia(nombre: str, carpeta_instancias: str | Path | None) -> dict
+  1. Busca la carpeta de la instancia solicitada. Si no se pasó una carpeta,
+     usa la ruta predeterminada del proyecto.
+  2. Lee parametros.json mediante json.load.
+  3. Lee nodos.csv y crea {id_nodo: (latitud, longitud)}.
+  4. Lee aristas.csv y crea un grafo de listas de adyacencia:
+       {origen: [(destino, distancia_en_decimetros), ...]}.
+     También crea una lista vacía para un nodo que aparece solo como destino.
+  5. Lee lotes.csv como {lote: {nodo, factor_zona}}.
+  6. Lee incidentes.csv como {id_incidente: {nodo, tipo}}.
+  7. Devuelve todas esas estructuras en un único diccionario.
+  Por qué existe: el resto del programa no necesita conocer CSV ni rutas; solo
+  trabaja con una instancia ya preparada en memoria.
+
+indexar_incidentes(incidentes: dict[int, dict[str, int | str]])
+  -> dict[int, list[tuple[str, int]]]
+  1. Recorre cada incidente.
+  2. Agrupa su tipo e identificador bajo el nodo donde ocurrió.
+  3. Devuelve {nodo: [(tipo, id_incidente), ...]}.
+  Por qué existe: después de ejecutar Dijkstra solo se revisan los nodos
+  alcanzados que sí tienen incidentes. Evita revisar toda la lista global para
+  cada lote.
+
+contar_por_tipo(incidentes: dict[int, dict[str, int | str]]) -> dict[str, int]
+  1. Recorre los incidentes.
+  2. Aumenta un contador para su tipo.
+  3. Devuelve, por ejemplo, {"hurto": 12, "incendio": 4}.
+  Por qué existe: es una utilidad para obtener un resumen del histórico.
+
+
+3. estaciones/grafo.py: CAMINOS MINIMOS
+----------------------------------------
+
+dijkstra(grafo: dict[int, list[tuple[int, int]]], origen: int, corte: int)
+  -> dict[int, int]
+  Esta función encuentra la distancia mínima desde un nodo origen a los nodos
+  que quedan a una distancia no mayor que corte.
+
+  Paso a paso:
+  1. Si el origen no está en el grafo, devuelve {}: no hay ruta que calcular.
+  2. Guarda distancia 0 para el origen y lo agrega a un montículo (heap).
+  3. Extrae siempre del montículo el nodo pendiente con menor distancia.
+  4. Si la entrada extraída es obsoleta, la ignora. Esto pasa cuando ese nodo
+     ya fue encontrado con una ruta más corta.
+  5. Recorre las aristas de salida del nodo y calcula nueva = d + peso.
+  6. Solo registra la ruta si no supera corte y mejora la distancia conocida.
+  7. Devuelve {nodo: distancia_minima}.
+
+  Por qué Dijkstra: las longitudes son no negativas y se necesitan distancias
+  mínimas en una red vial. El corte es importante: no explora zonas lejanas que
+  ninguna estación podría cubrir.
+
+
+4. estaciones/parte1.py: COSTOS Y COBERTURA POSIBLE
+----------------------------------------------------
+
+costo_estacion(costo_base: int | float, factor_zona: float) -> int
+  1. Multiplica costo_base por el factor de zona del lote.
+  2. Redondea a seis decimales para limpiar imprecisiones binarias, como
+     2800.0000000000005.
+  3. Aplica floor(producto + 0.5), es decir, redondeo convencional hacia arriba
+     en los empates.
+  Por qué existe: concentra la regla de negocio del costo y evita que cada
+  algoritmo la replique de forma distinta.
+
+alcance_de_estaciones(instancia: dict) -> dict[(str, str), dict]
+  Esta es la pieza principal de la Parte 1. La salida tiene esta forma:
+    {(lote, tipo): {"costo": entero, "incidentes_cubiertos": [ids]}}
+
+  Paso a paso:
+  1. Obtiene los tipos, el grafo y el índice de incidentes por nodo.
+  2. Convierte el radio de cada tipo de metros a decímetros.
+  3. Calcula el mayor de los radios.
+  4. Para cada lote, ejecuta Dijkstra UNA vez usando ese radio mayor como corte.
+  5. Recorre los nodos alcanzados. Si un incidente está dentro del radio de su
+     propio tipo de estación, lo agrega a ese tipo.
+  6. Para cada tipo de estación, calcula el costo y ordena sus incidentes.
+  7. Devuelve las opciones para todos los pares (lote, tipo).
+
+  Por qué se usa un solo Dijkstra por lote: las tres estaciones parten del
+  mismo lote. Una búsqueda hasta el radio mayor contiene toda la información
+  necesaria para filtrar después los radios menores. Esto reduce mucho el
+  trabajo en la instancia ciudad.
+
+resolver_parte1(nombre_instancia: str, carpeta_instancias: str | Path | None)
+  -> dict
+  1. Carga la instancia con leer_instancia.
+  2. Llama alcance_de_estaciones.
+  3. Devuelve su resultado.
+  Por qué existe: ofrece un punto de entrada sencillo por nombre de instancia.
+
+incidentes_alcanzables(instancia: dict, alcance: dict) -> dict[str, set[int]]
+  1. Crea un conjunto vacío para cada tipo.
+  2. Une los ids cubiertos por todas las posibles estaciones de ese tipo.
+  3. Devuelve los incidentes que serían alcanzables sin considerar presupuesto.
+  Por qué existe: calcula un techo de cobertura para comparar una solución.
+
+valor_maximo_posible(instancia: dict, alcance: dict) -> int
+  1. Obtiene los incidentes alcanzables por tipo.
+  2. Multiplica la cantidad de cada tipo por su peso o prioridad.
+  3. Suma los resultados.
+  Por qué existe: indica el valor máximo teórico; no implica que el presupuesto
+  permita construir las estaciones necesarias.
+
+
+5. estaciones/parte2.py: HEURISTICAS
+-------------------------------------
+
+evaluar_propuesta(instancia: dict, alcance: dict, estaciones: list[tuple[str, str]])
+  -> dict
+  1. Recibe una lista de elecciones (lote, tipo).
+  2. Suma el costo de cada elección.
+  3. Usa sets por tipo para unir incidentes y no contar dos veces un incidente
+     cubierto por varias estaciones.
+  4. Calcula casos cubiertos por tipo.
+  5. Calcula valor = casos * peso de cada tipo.
+  6. Devuelve estaciones ordenadas, costo_total, casos_cubiertos y valor.
+  Por qué existe: es la única forma de evaluar una propuesta, usada por las
+  heurísticas y por la búsqueda exacta.
+
+construir_heuristica(instancia: dict, alcance: dict, metodo: str = "base")
+  -> dict
+  Construye una propuesta agregando una estación a la vez.
+
+  Paso a paso:
+  1. Guarda presupuesto, tipos, lotes ya usados, incidentes ya cubiertos y
+     dinero gastado.
+  2. Examina cada opción de alcance.
+  3. Descarta una opción si el lote ya tiene estación, si excede el presupuesto
+     o si no cubre incidentes nuevos.
+  4. Calcula el valor marginal: incidentes nuevos * peso del tipo.
+  5. Construye una clave de orden según el método:
+       base:     prioriza solamente el valor marginal.
+       densidad: prioriza valor marginal / costo.
+       ajustada: prioriza densidad y favorece tipos de mayor peso.
+  6. Ordena candidatos. Los desempates por lote y tipo vuelven el resultado
+     estable y reproducible.
+  7. Elige el mejor, actualiza presupuesto y cobertura, y repite.
+  8. Cuando ya no existen candidatos válidos, evalúa la propuesta final.
+  Por qué se usan heurísticas: encuentran soluciones buenas rápidamente cuando
+  enumerar todas las combinaciones sería demasiado costoso.
+
+resolver_parte2(nombre: str, carpeta_instancias: str | Path | None) -> dict
+  1. Carga la instancia y calcula su alcance.
+  2. Ejecuta las tres heurísticas: base, densidad y ajustada.
+  3. Devuelve un diccionario con las tres propuestas.
+  Por qué existe: permite compararlas con una única llamada.
+
+
+6. estaciones/parte3.py: BUSQUEDA EXACTA CON PODA
+-------------------------------------------------
+
+resolver_exacto(instancia: dict, alcance: dict | None, limite_segundos: float | None)
+  -> (propuesta, metricas)
+  Busca la propuesta de mayor valor. Si alcance no se recibe, lo calcula. La
+  respuesta adicional incluye segundos, nodos explorados y optimo_probado.
+
+  Preparación:
+  1. Calcula las opciones de cada lote y ordena los lotes que podrían aportar
+     más valor primero. Así se encuentra pronto una buena solución inicial.
+  2. Usa la mejor de las heurísticas como "mejor" inicial; esto ayuda a podar.
+  3. Construye restantes[i]: los incidentes que todavía podrían cubrirse desde
+     la posición i en adelante.
+
+buscar(i, costo, cubiertos, valor, estaciones) -> None
+  Es una función interna recursiva. Cada llamada decide qué hacer con el lote i.
+  1. Aumenta el contador de nodos y corta si venció limite_segundos.
+  2. Calcula un techo optimista: valor actual más todos los incidentes todavía
+     alcanzables. Si no supera la mejor solución, no continúa esa rama.
+  3. Calcula una segunda cota por presupuesto mediante una mochila fraccionaria.
+     Es optimista porque permite fracciones y solapamientos; por ello sirve para
+     descartar ramas sin riesgo de eliminar el óptimo real.
+  4. Si ya se consideraron todos los lotes, evalúa la propuesta y reemplaza la
+     mejor si su valor es mayor.
+  5. Si no, prueba cada tipo que cabe en el presupuesto y después prueba no
+     construir nada en ese lote.
+  Por qué existe: enumera soluciones solo donde todavía es posible mejorar, en
+  lugar de revisar el espacio completo de combinaciones.
+
+resolver_parte3(nombre: str, carpeta_instancias: str | Path | None,
+                limite_segundos: float | None) -> (propuesta, metricas)
+  Carga la instancia y delega en resolver_exacto. Es el acceso cómodo a la
+  Parte 3 desde consola o desde otro módulo.
+
+
+7. estaciones/parte4.py: RECOMENDACION Y PRESENTACION
+------------------------------------------------------
+
+recomendar(instancia: dict, alcance: dict | None) -> (nombre, candidatas, alcance)
+  1. Calcula alcance si hace falta.
+  2. Genera las tres propuestas heurísticas.
+  3. Escoge la de mayor valor. Si hay empate, usa menor costo y luego el nombre
+     del método, para que el criterio sea transparente y estable.
+  4. Devuelve el método elegido, todas las candidatas y el alcance reutilizable.
+
+tabla_propuesta(propuesta: dict, alcance: dict) -> list[dict]
+  1. Recorre las estaciones elegidas.
+  2. Para cada una forma una fila con lote, tipo, costo y número de casos.
+  Por qué existe: convierte la estructura de cálculo en filas fáciles de mostrar
+  tanto en consola como en la tabla de la interfaz.
+
+informe_propuesta(nombre: str, metodo: str = "heuristica",
+                  carpeta_instancias: str | Path | None) -> dict
+  1. Carga instancia y alcance.
+  2. Si metodo es "exacta", pide el óptimo y explica cuántas ramas exploró.
+  3. Si no, llama recomendar y explica la heurística elegida.
+  4. Devuelve instancia, alcance, propuesta, filas, información adicional y una
+     justificación textual.
+  Por qué existe: es una capa de presentación reutilizable; la interfaz no
+  conoce detalles de algoritmos y el algoritmo no conoce widgets gráficos.
+
+
+8. estaciones/informe.py: SALIDA DE LA PARTE 1
+------------------------------------------------
+
+tabla_alcance(alcance: dict) -> list[str]
+  1. Ordena las claves (lote, tipo).
+  2. Da formato a cada opción como una línea de texto.
+  Por qué existe: separa el formato de impresión de los cálculos.
+
+informe_parte1(nombre: str, carpeta_instancias, max_ids, mostrar_tabla) -> dict
+  1. Carga la instancia.
+  2. Calcula el alcance.
+  3. Si mostrar_tabla es verdadero, imprime cada línea formada por tabla_alcance.
+  4. Siempre devuelve el alcance, para que quien llama pueda reutilizarlo.
+  Nota: max_ids está en la firma como opción futura, aunque actualmente no se
+  utiliza al construir la salida.
+
+
+9. main.py: INTERFAZ DE CONSOLA
+--------------------------------
+
+_imprimir_propuesta(etiqueta: str, propuesta: dict) -> None
+  Imprime una etiqueta y una propuesta. Evita repetir ese formato en cada parte.
+
+construir_parser() -> argparse.ArgumentParser
+  1. Crea los subcomandos parte1, parte2, parte3 y parte4.
+  2. Añade instancia(s), carpeta alternativa de instancias y las opciones
+     particulares de cada parte.
+  Por qué existe: concentra la definición de argumentos del programa.
+
+main(argv: list[str] | None) -> int
+  1. Interpreta los argumentos. Si no hay parte, muestra un menú interactivo.
+  2. Convierte la selección del menú en una llamada a sí misma con argumentos.
+  3. Para cada instancia solicitada carga datos y ejecuta la parte elegida.
+  4. Parte 1 imprime alcance; Parte 2 compara heurísticas; Parte 3 compara con
+     el óptimo salvo para ciudad; Parte 4 imprime la recomendación detallada.
+  5. Captura errores de ruta o de opciones y devuelve 1; devuelve 0 si termina
+     correctamente y 2 si el menú recibe una opción inválida.
+  Por qué no se calcula el óptimo de ciudad: con muchos lotes el número de
+  combinaciones crece de forma exponencial y deja de ser viable.
+
+
+10. interfaz.py: APLICACION GRAFICA
+-----------------------------------
+
+class Aplicacion(tk.Tk)
+  Hereda de tk.Tk, es decir, representa toda la ventana.
+
+__init__() -> None
+  Configura título, tamaño, colores, variables que actualizan widgets, caché de
+  resultados y datos actuales. Crea estilos, encabezado y contenido. Finalmente
+  programa mostrar con after_idle para esperar a que el canvas tenga un tamaño
+  real; si se dibujara antes, el mapa podría aparecer vacío.
+
+_crear_estilos() -> None
+  Configura el tema clam de ttk y el aspecto de botones, listas desplegables y
+  tabla. Por qué: ttk permite mantener una apariencia consistente sin instalar
+  bibliotecas externas.
+
+_crear_encabezado() -> None
+  Construye el título azul, la tarjeta de controles, las listas de instancia y
+  método, el botón de actualización y el mensaje de estado.
+
+_crear_contenido() -> None
+  Construye tres tarjetas de métricas, el panel del mapa, el panel lateral con
+  tabla y el texto de justificación. Con grid asigna más ancho al mapa que a la
+  tabla porque es el elemento de exploración principal.
+
+_crear_metricas(contenedor) -> None
+  Crea las tarjetas Valor generado, Inversión y Casos cubiertos. Sus textos se
+  conectan a StringVar, por lo que cambian automáticamente al cargar datos.
+
+_tarjeta(padre, padx, pady) -> tk.Frame
+  Fabrica un panel blanco con borde suave. Por qué: evita repetir la misma
+  configuración visual en cada sección.
+
+_etiqueta(padre, texto, color, tamano, peso, variable) -> tk.Label
+  Fabrica una etiqueta con fuente y colores consistentes. variable es opcional
+  y permite que una StringVar actualice el texto automáticamente.
+
+_titulo_panel(padre, titulo, subtitulo) -> tk.Frame
+  Construye el encabezado común de los paneles de mapa y tabla.
+
+_validar_metodo() -> None
+  Si se selecciona ciudad con búsqueda exacta, cambia a heurística y explica el
+  motivo. Por qué: evita pedir al usuario una operación no viable.
+
+mostrar() -> None
+  1. Valida método y forma la clave (instancia, método).
+  2. Deshabilita el botón mientras calcula.
+  3. Consulta caché; si no existe, llama informe_propuesta y guarda el resultado.
+  4. Actualiza métricas y tabla, dibuja el mapa y muestra un mensaje.
+  5. Ante un error, lo informa; al final habilita otra vez el botón.
+  Por qué existe caché: cambiar y volver a un escenario ya calculado es rápido.
+
+_actualizar_panel(datos) -> None
+  Guarda datos para posibles redibujos, rellena métricas, justificación y tabla.
+  También asigna color a cada tipo de estación en la tabla.
+
+_programar_redibujado(evento) -> None
+  Se ejecuta cuando cambia el tamaño del canvas. Cancela un redibujado pendiente
+  y programa uno 120 ms después. Por qué: al arrastrar la ventana se producen
+  muchos eventos; esta espera evita redibujar innecesariamente muchas veces.
+
+_redibujar() -> None
+  Si existen datos actuales, llama dibujar. Es la acción diferida programada por
+  _programar_redibujado.
+
+dibujar(datos) -> None
+  1. Limpia el canvas y obtiene tamaño real, límites de coordenadas y márgenes.
+  2. Define punto(nodo), que transforma latitud/longitud a píxeles de pantalla.
+  3. Dibuja una muestra de las calles. En redes grandes usa un paso para no
+     bloquear la interfaz.
+  4. Marca incidentes con el color de su tipo: rellenos si están cubiertos,
+     vacíos si no lo están.
+  5. Marca lotes como cuadrados; toma el color de la estación elegida o gris
+     si el lote no se usa.
+  6. Agrega la leyenda.
+
+punto(nodo: int) -> tuple[float, float]
+  Función interna de dibujar. Normaliza coordenadas geográficas al rectángulo
+  visible del canvas. Por qué existe: se reutiliza para calles, incidentes y
+  lotes, asegurando que todos queden alineados.
+
+_leyenda() -> None
+  Dibuja la referencia de colores en la esquina superior del canvas.
+
+
+11. test_parte1.py: PRUEBAS
+---------------------------
+
+test_casos_del_enunciado() -> None
+  Comprueba que dos casos oficiales producen exactamente el costo y los
+  incidentes esperados. Usa una caché para no recargar la misma instancia.
+
+test_costo_redondea_al_millon_mas_cercano() -> None
+  Prueba los redondeos normales y varios productos flotantes que podrían tener
+  pequeños errores binarios.
+
+test_un_lote_sin_cobertura_devuelve_lista_vacia() -> None
+  Verifica que un lote aislado en ciudad no genere error y entregue listas
+  vacías para cada tipo.
+
+test_ciudad_termina_en_menos_de_un_minuto() -> None
+  Mide la ejecución sobre ciudad, verifica que existan 240 combinaciones
+  (80 lotes por 3 tipos) y exige que tarde menos de 60 segundos.
+
+_correr_sin_pytest() -> int
+  Ejecuta manualmente las cuatro pruebas, imprime OK o FALLA por cada una y
+  devuelve cuántas fallaron. Permite probar el proyecto incluso sin instalar
+  pytest.
+
+
+12. COMO EJECUTAR
+----------------
+
+Desde la carpeta Curso:
+
+  python main.py parte1 pequena
+  python main.py parte2 comuna
+  python main.py parte3 pequena
+  python main.py parte4 ciudad
+  python interfaz.py
+  python test_parte1.py
+
