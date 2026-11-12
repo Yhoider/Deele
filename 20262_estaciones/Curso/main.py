@@ -6,7 +6,7 @@ import sys
 from estaciones.informe import informe_parte1
 from estaciones.instancia import leer_instancia
 from estaciones.parte1 import alcance_de_estaciones
-from estaciones.parte2 import construir_heuristica
+from estaciones.parte2 import HEURISTICAS, construir_heuristica
 from estaciones.parte3 import resolver_exacto
 from estaciones.parte4 import informe_propuesta
 
@@ -67,10 +67,10 @@ def main(argv: list[str] | None = None) -> int:
             instancia = leer_instancia(nombre, args.carpeta)
             alcance = alcance_de_estaciones(instancia)
             if args.parte == "parte2":
-                for h in ("base", "densidad", "ajustada"):
+                for h in HEURISTICAS:
                     _imprimir_propuesta(h, construir_heuristica(instancia, alcance, h))
             elif args.parte == "parte3":
-                for h in ("base", "densidad", "ajustada"):
+                for h in HEURISTICAS:
                     propuesta_h = construir_heuristica(instancia, alcance, h)
                     _imprimir_propuesta(h, propuesta_h)
                 if nombre == "ciudad":

@@ -23,7 +23,14 @@ from .instancia import (
     leer_instancia,
 )
 from .parte1 import alcance_de_estaciones, costo_estacion, resolver_parte1
-from .parte2 import construir_heuristica, evaluar_propuesta, resolver_parte2
+from .parte2 import (
+    HEURISTICAS,
+    busqueda_local,
+    construir_heuristica,
+    evaluar_propuesta,
+    orden_heuristica,
+    resolver_parte2,
+)
 from .parte3 import resolver_exacto, resolver_parte3
 
 __all__ = [
@@ -38,6 +45,9 @@ __all__ = [
     "resolver_parte1",
     "construir_heuristica",
     "evaluar_propuesta",
+    "busqueda_local",
+    "HEURISTICAS",
+    "orden_heuristica",
     "resolver_parte2",
     "resolver_exacto",
     "resolver_parte3",

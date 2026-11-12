@@ -1,0 +1,44 @@
+{
+  "descripcion": "Recorte aproximado de Belén sobre la red vial real de Medellín. Zona no oficial: 7 de sus 14 lotes son hipotéticos.",
+  "presupuesto_millones": 12000,
+  "unidad_costos": "millones de pesos colombianos",
+  "un_lote_admite_a_lo_sumo_una_estacion": true,
+  "tipos": {
+    "hurto": {
+      "estacion": "CAI",
+      "costo_base": 1000,
+      "radio_m": 1000,
+      "peso": 1
+    },
+    "accidente": {
+      "estacion": "Estación de tránsito y grúas",
+      "costo_base": 2000,
+      "radio_m": 2000,
+      "peso": 3
+    },
+    "incendio": {
+      "estacion": "Estación de bomberos",
+      "costo_base": 5000,
+      "radio_m": 3000,
+      "peso": 5
+    }
+  },
+  "titulo": "Belén",
+  "no_oficial": true,
+  "generada_por": "generar_zonas.py",
+  "caja_lat_lon": [
+    6.208,
+    6.235,
+    -75.615,
+    -75.585
+  ],
+  "lotes_hipoteticos": [
+    "H01",
+    "H02",
+    "H03",
+    "H04",
+    "H05",
+    "H06",
+    "H07"
+  ]
+}

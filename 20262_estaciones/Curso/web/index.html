@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estaciones para la ciudad</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <main id="mapa" aria-label="Mapa de cobertura">
+    <canvas id="capa-calles"></canvas>
+    <canvas id="capa-datos"></canvas>
+    <div id="aviso" class="aviso">Cargando la red vial…</div>
+    <div id="paso" class="paso" hidden></div>
+    <ul id="leyenda" class="leyenda"></ul>
+    <div class="zoom">
+      <button id="acercar" type="button" aria-label="Acercar">+</button>
+      <button id="alejar" type="button" aria-label="Alejar">−</button>
+      <button id="encuadrar" type="button" aria-label="Ver todo el mapa">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div id="globo" class="globo" hidden></div>
+    <div id="menu-lote" class="menu-lote" hidden></div>
+  </main>
+
+  <aside id="panel">
+    <header>
+      <p class="sobretitulo">Proyecto ADA · Estaciones para la ciudad</p>
+      <h1>¿Dónde ubicar las estaciones?</h1>
+      <p class="bajada">CAI, tránsito y bomberos con un presupuesto limitado, midiendo el alcance por la red vial.</p>
+    </header>
+
+    <section>
+      <h2>Escenario</h2>
+      <div id="escenarios" class="segmentos" role="radiogroup" aria-label="Escenario"></div>
+      <p id="resumen" class="nota"></p>
+    </section>
+
+    <section>
+      <h2><label for="presupuesto">Presupuesto</label></h2>
+      <div class="fila-presupuesto">
+        <input type="range" id="presupuesto">
+        <output id="presupuesto-valor" for="presupuesto"></output>
+      </div>
+      <button id="presupuesto-original" type="button" class="enlace" hidden>Volver al presupuesto original</button>
+    </section>
+
+    <section>
+      <h2>Propuestas</h2>
+      <div id="propuestas" class="propuestas" role="radiogroup" aria-label="Propuesta"></div>
+      <p id="tope" class="nota"></p>
+      <p id="explicacion" class="explicacion"></p>
+      <div class="acciones">
+        <button id="animar" type="button" class="boton">▶ Ver cómo decide</button>
+        <button id="copiar" type="button" class="enlace" hidden>Partir de la mejor heurística</button>
+        <button id="vaciar" type="button" class="enlace" hidden>Vaciar</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Resultado</h2>
+      <div id="cifras" class="cifras"></div>
+      <div id="por-tipo" class="por-tipo"></div>
+    </section>
+
+    <section>
+      <h2>Estaciones</h2>
+      <div class="tabla-caja">
+        <table id="tabla">
+          <thead><tr><th>#</th><th>Lote</th><th>Estación</th><th class="num">Costo</th><th class="num">Casos nuevos</th><th class="num">Valor</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
